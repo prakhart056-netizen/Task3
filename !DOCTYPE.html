@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Quiz & Weather App</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+
+        p {
+            font-size: 1.2rem;
+        }
+
+        /* Quiz Section Styles */
+        #quiz-section {
+            padding: 20px;
+            background-color: white;
+            margin: 20px;
+            border-radius: 8px;
+        }
+
+        #question-container {
+            font-size: 1.5rem;
+        }
+
+        #options-container {
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #score-container {
+            margin-top: 20px;
+            font-size: 1.2rem;
+        }
+
+        /* Weather Section Styles */
+        #weather-section {
+            padding: 20px;
+            background-color: white;
+            margin: 20px;
+            border-radius: 8px;
+        }
+
+        #weather-container input {
+            padding: 10px;
+            font-size: 1rem;
+            margin-right: 10px;
+        }
+
+        #weather-info {
+            margin-top: 20px;
+            font-size: 1.2rem;
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            header {
+                font-size: 1.8rem;
+            }
+
+            #quiz-container, #weather-container {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Responsive Quiz & Weather App</h1>
+        <p>Take the quiz and check the weather!</p>
+    </header>
+
+    <!-- Quiz Section -->
+    <section id="quiz-section">
+        <div id="quiz-container">
+            <h2>Test Your Knowledge!</h2>
+            <div id="question-container"></div>
+            <div id="options-container"></div>
+            <button id="next-btn" onclick="nextQuestion()">Next Question</button>
+            <div id="feedback"></div>
+            <div id="score-container"></div>
+        </div>
+    </section>
+
+    <!-- Weather Section -->
+    <section id="weather-section">
+        <h2>Current Weather</h2>
+        <div id="weather-container">
+            <input type="text" id="city" placeholder="Enter City" />
+            <button onclick="getWeather()">Get Weather</button>
+            <div id="weather-info"></div>
+        </div>
+    </section>
+
+    <script>
+        // Quiz Data
+        const quizQuestions = [
+            {
+                question: "What is the capital of France?",
+                options: ["Berlin", "Madrid", "Paris", "Rome"],
+                correctAnswer: "Paris"
+            },
+            {
+                question: "What is the largest planet in our Solar System?",
+                options: ["Earth", "Mars", "Jupiter", "Saturn"],
+                correctAnswer: "Jupiter"
+            },
+            {
+                question: "Which element has the chemical symbol 'O'?",
+                options: ["Oxygen", "Osmium", "Ozone", "Ocelot"],
+                correctAnswer: "Oxygen"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        function loadQuestion() {
+            const questionData = quizQuestions[currentQuestionIndex];
+            const questionContainer = document.getElementById('question-container');
+            const optionsContainer = document.getElementById('options-container');
+
+            questionContainer.innerText = questionData.question;
+            optionsContainer.innerHTML = '';
+
+            questionData.options.forEach(option => {
+                const button = document.createElement('button');
+                button.innerText = option;
+                button.onclick = () => checkAnswer(option);
+                optionsContainer.appendChild(button);
+            });
+
+            document.getElementById('next-btn').style.display = 'none';
+        }
+
+        function checkAnswer(selectedOption) {
+            const questionData = quizQuestions[currentQuestionIndex];
+            const feedback = document.getElementById('feedback');
+
+            if (selectedOption === questionData.correctAnswer) {
+                score++;
+                feedback.innerText = "Correct!";
+            } else {
+                feedback.innerText = "Incorrect!";
+            }
+
+            document.getElementById('next-btn').style.display = 'block';
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < quizQuestions.length) {
+                loadQuestion();
+                document.getElementById('feedback').innerText = '';
+            } else {
+                showScore();
+            }
+        }
+
+        function showScore() {
+            const scoreContainer = document.getElementById('score-container');
+            scoreContainer.innerText = `Your score: ${score} / ${quizQuestions.length}`;
+        }
+
+        // Weather API Integration
+        const apiKey = 'YOUR_OPENWEATHER_API_KEY';  // Replace with your API Key
+
+        function getWeather() {
+            const city = document.getElementById('city').value;
+            const weatherInfo = document.getElementById('weather-info');
+
+            if (city) {
+                const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.cod === 200) {
+                            const weatherDescription = data.weather[0].description;
+                            const temperature = data.main.temp;
+                            weatherInfo.innerHTML = `
+                                <p>Weather: ${weatherDescription}</p>
+                                <p>Temperature: ${temperature}°C</p>
+                            `;
+                        } else {
+                            weatherInfo.innerHTML = "<p>City not found. Please try again.</p>";
+                        }
+                    })
+                    .catch(error => {
+                        weatherInfo.innerHTML = "<p>Error fetching weather data.</p>";
+                    });
+            } else {
+                weatherInfo.innerHTML = "<p>Please enter a city name.</p>";
+            }
+        }
+
+        // Initialize quiz
+        loadQuestion();
+    </script>
+</body>
+</html>
